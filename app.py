@@ -3108,6 +3108,9 @@ def _safe_filename(text, max_len=90):
 def _write_plotly_html(fig, out_path, title=None):
     """
     Guarda una figura Plotly como HTML interactivo.
+
+    El botón de cámara del HTML exporta PNG en alta resolución
+    manteniendo los mismos colores y estilo de la figura.
     """
     try:
         fig.write_html(
@@ -3118,11 +3121,12 @@ def _write_plotly_html(fig, out_path, title=None):
                 "toImageButtonOptions": {
                     "format": "png",
                     "filename": _safe_filename(title or out_path.stem),
-                    "height": 900,
-                    "width": 1400,
-                    "scale": 2,
+                    "height": 1200,
+                    "width": 2200,
+                    "scale": 3,
                 },
                 "displaylogo": False,
+                "responsive": True,
             },
         )
         return True
@@ -3132,13 +3136,23 @@ def _write_plotly_html(fig, out_path, title=None):
 
 def _try_write_plotly_png(fig, out_path):
     """
-    Intenta guardar PNG si kaleido está disponible.
-    Si no está disponible, no rompe la app.
+    Exporta PNG nítido y a color con Plotly + Kaleido.
+
+    Mantiene los colores originales de la app porque exporta la propia
+    figura Plotly, sin reconstruirla ni cambiar sus trazas.
+    Requiere kaleido y, en Streamlit Cloud, chromium en packages.txt.
     """
     try:
-        fig.write_image(str(out_path), width=1600, height=1000, scale=2)
+        fig.write_image(
+            str(out_path),
+            format="png",
+            width=2200,
+            height=1200,
+            scale=3,
+        )
         return True
-    except Exception:
+    except Exception as e:
+        print(f"PNG export error ({out_path}): {e}")
         return False
 
 
@@ -3413,7 +3427,7 @@ def write_all_graph_exports(figures, outdir, formats=("html",)):
         if "svg" in formats:
             try:
                 svg_path = svg_dir / f"{base}.svg"
-                fig.write_image(str(svg_path), width=1600, height=1000, scale=1)
+                fig.write_image(str(svg_path), format="svg", width=2200, height=1200, scale=1)
                 ok_svg = True
                 svg_name = f"svg/{svg_path.name}"
             except Exception:
